@@ -1,0 +1,105 @@
+//自动补全
+PUT /suggest2/
+{
+	"settings": {
+		"analysis": {
+			"analyzer": {
+				"default": {
+					"tokenizer": "ik_max_word"   //默认
+				},
+				"pinyin_analyzer": {
+					"tokenizer": "shopmall_pinyin"   
+				},
+				"first_py_letter_analyzer": {  ////尝试拼音首字母提示
+					"tokenizer": "first_py_letter"
+				},
+				"full_pinyin_letter_analyzer": {    
+					"tokenizer": "full_pinyin_letter"
+				}
+			},
+			"tokenizer": {
+				"shopmall_pinyin": {
+					"keep_joined_full_pinyin": "true",
+					"keep_first_letter": "true",
+					"keep_separate_first_letter": "false",
+					"lowercase": "true",
+					"type": "pinyin",
+					"limit_first_letter_length": "16",
+					"keep_original": "true",
+					"keep_full_pinyin": "true",
+					"keep_none_chinese_in_joined_full_pinyin": "true"
+				},
+				"first_py_letter": {
+					"type": "pinyin",
+					"keep_first_letter": true,
+					"keep_full_pinyin": false,
+					"keep_original": false,
+					"limit_first_letter_length": 16,
+					"lowercase": true,
+					"trim_whitespace": true,
+					"keep_none_chinese_in_first_letter": false,
+					"none_chinese_pinyin_tokenize": false,
+					"keep_none_chinese": true,
+					"keep_none_chinese_in_joined_full_pinyin": true
+				},
+				"full_pinyin_letter": {
+					"type": "pinyin",
+					"keep_separate_first_letter": false,
+					"keep_full_pinyin": false,
+					"keep_original": false,
+					"limit_first_letter_length": 16,
+					"lowercase": true,
+					"keep_first_letter": false,
+					"keep_none_chinese_in_first_letter": false,
+					"none_chinese_pinyin_tokenize": false,
+					"keep_none_chinese": true,
+					"keep_joined_full_pinyin": true,
+					"keep_none_chinese_in_joined_full_pinyin": true
+				}
+			}
+		}
+	}
+}
+PUT /suggest2/_mapping/folks?include_type_name=true
+{	"properties": {
+			"name": {
+				"type": "completion",   
+				"fields": {
+					"pinyin": {     
+						"type": "completion",
+						"analyzer": "pinyin_analyzer"
+					},
+					"keyword_pinyin": {   //只包含字母
+						"type": "completion",
+						"analyzer": "full_pinyin_letter_analyzer"
+					},
+					"keyword_first_py": {  //拼音首字母提示
+						"type": "completion",
+						"analyzer": "first_py_letter_analyzer"
+					}
+				}
+			}
+}
+}
+POST /suggest2/folks/_search
+  {  "name":"苹果"}
+  POST /suggest2/folks/
+  {  "name":"水果"}
+  POST /suggest2/folks/
+  {  "name":"桃子"}
+GET /suggest2/folks/_search
+GET /suggest2/_mapping/?pretty 
+GET /suggest2/folks/_search
+{
+  "size": 0,
+  "_source": "name",
+  "suggest": {
+    "my-suggest-1": {
+      "text": "苹",
+      "completion": {
+        "field": "name",
+        "size": 20
+      }
+    }
+  }
+}

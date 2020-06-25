@@ -1,0 +1,35 @@
+SearchRequestBuilder的size要设置为0，否则显示hits结果
+
+// SearchRequest 搜索请求
+        // SearchSourceBuilder 条件构造
+        // HighlightBuilder 构建高亮
+        // TermQueryBuilder 精确查询
+        
+ 查询条件
+    MatchAllQueryBuilder matchAllQueryBuilder = QueryBuilders.matchAllQuery();
+        sourceBuilder.query(matchAllQueryBuilder)
+                .timeout(new TimeValue(60, TimeUnit.SECONDS));
+//https://blog.csdn.net/Mr_kidBK/java/article/details/105477095
+
+
+
+//增, source 里对象创建方式可以是JSON字符串，或者Map，或者XContentBuilder 对象
+IndexRequest indexRequest = new IndexRequest("index", "type", "ID").source(builder);
+highLevelClient.index(indexRequest);
+
+//删
+DeleteRequest deleteRequest = new DeleteRequest("index", "type", "ID");
+highLevelClient.delete(deleteRequest);
+
+//改, source 里对象创建方式可以是JSON字符串，或者Map，或者XContentBuilder 对象
+UpdateRequest updateRequest = new UpdateRequest("index", "type", "ID").doc(builder);
+highLevelClient.update(updateRequest);
+
+//查
+GetRequest getRequest = new GetRequest("index", "type", "ID");
+highLevelClient.get(getRequest);
+
+ client.search
+ client.index()同步  client.get(
+ client.getAsync()异步
+ 

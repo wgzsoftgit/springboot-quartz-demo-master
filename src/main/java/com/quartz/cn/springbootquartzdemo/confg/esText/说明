@@ -1,0 +1,72 @@
+http://localhost:9200/ 
+http://localhost:9200?pretty
+
+启动Kibana
+http://localhost:5601
+
+全文检索：我想搜索商品名称包含牙膏的商品，select * from products where product_name like "%牙膏%"
+结构化检索：我想搜索商品分类为日化用品的商品都有哪些，select * from products where category_id='日化用品'
+
+部分匹配、自动完成、搜索纠错、搜索推荐
+数据分析：我们分析每一个商品分类下有多少个商品，select category_id,count(*) from products group by category_id
+全文检索 、结构化检索、数据分析、
+
+
+
+
+
+
+
+
+
+
+GET /_search
+#创建Document
+PUT /ecommerce/product/2
+{
+    "name" : "gaolujie yagao",
+    "desc" :  "gaoxiao meibai",
+    "price" :  30,
+    "producer" :      "gaolujie producer",
+    "tags": [ "meibai", "fangzhu" ]
+}
+#检索文档（查询）
+GET /ecommerce/product/1
+
+#替换文档（全量替换）
+PUT /ecommerce/product/1
+{
+    "name" : "jiaqiangban gaolujie yagao",
+    "desc" :  "gaoxiao meibai",
+    "price" :  30,
+    "producer" :      "gaolujie producer",
+    "tags": [ "meibai", "fangzhu" ]
+}
+#更新文档（修改）
+POST /ecommerce/product/1/_update
+{
+  "doc": {
+    "name": "jiaqiangban gaolujie yagao updata"
+  }
+}
+#删除文档（删除）
+DELETE /ecommerce/product/1
+#在删除一个document之后，我们可以从侧面证明，它不是立即物理删除的，因为它的一些版本号等信息还是保留的。
+GET /ecommerce/product/_search
+#查询所有的商品
+GET /ecommerce/product/_search
+{
+  "query": { "match_all": {} }
+}
+#查询名称包含yagao的商品，同时按照价格降序排序
+GET /ecommerce/product/_search
+{
+ "query" : {
+"match" : {
+"name" : "yagao"
+}
+ },
+"sort": [
+{ "price": "desc" }
+]
+}

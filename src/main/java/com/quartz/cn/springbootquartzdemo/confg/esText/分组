@@ -1,0 +1,52 @@
+ AggregationBuilder agg1 = AggregationBuilders.terms("agg1").field(field1);
+	   // AggregationBuilders.count(name) 计数
+	   // AggregationBuilders.sum(name) 聚合
+	    AggregationBuilder agg2 = AggregationBuilders.terms("agg2").field(field2);
+	    agg1.subAggregation(agg2);
+	    searchSourceBuilder.aggregation(agg1);
+	    
+	    SearchRequest searchRequest = new SearchRequest(indexs).types(type);
+	    searchRequest.source(searchSourceBuilder);
+	    
+	    SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+	    Terms terms1 = searchResponse.getAggregations().get("agg1");
+	    Terms terms2;
+	    for (Terms.Bucket bucket1 : terms1.getBuckets()) {
+	        terms2 = bucket1.getAggregations().get("agg2");
+	        Map<String, Long> map2 = new HashMap<>();
+	        for (Terms.Bucket bucket2 : terms2.getBuckets()) {
+	            map2.put(bucket2.getKey().toString(), bucket2.getDocCount());
+	        }
+	        groupMap.put(bucket1.getKey().toString(), map2);
+	    }
+	    return groupMap;
+	}
+	
+	
+	
+	//按时间聚合，求TX的和
+//DateHistogramInterval.minutes(5)是指按5分钟聚合
+//format("yyyy-MM-dd HH:mm")是指聚合的结果的Time的格式
+//BucketOrder.aggregation("tx_sum", false)对聚合结果的排序 true为正序 false为倒序
+AggregationBuilder aggregation = AggregationBuilders.dateHistogram("time_count").field("Time").fixedInterval(DateHistogramInterval.minutes(5)).format("yyyy-MM-dd HH:mm")
+	.order(BucketOrder.aggregation("tx_sum", false));
+aggregation.subAggregation(AggregationBuilders.sum("tx_sum").field("Tx"));
+sourceBuilder.aggregation(aggregation);
+
+searchRequest.source(sourceBuilder);
+//发送请求
+SearchResponse searchResponse = client.search(searchRequest,RequestOptions.DEFAULT);
+
+//获取聚合的结果
+Map<String,Double> map = new LinkedHashMap<>();
+Aggregations aggregations = searchResponse.getAggregations();
+Aggregation aggregation1 = aggregations.get("time_count");
+List<? extends Histogram.Bucket> buckets = ((Histogram)aggregation1).getBuckets();
+for (Histogram.Bucket bucket : buckets){
+	String keyAsString = bucket.getKeyAsString();
+	Sum sum = bucket.getAggregations().get("tx_sum");
+	map.put(keyAsString,sum.getValue());
+}
+————————————————
+版权声明：本文为CSDN博主「CHSXS」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。
+原文链接：https://blog.csdn.net/CHSXS/java/article/details/106216641
